@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Pod
+spec:
+  hostAliases:
+    - ip: "151.101.52.215"
+      hostnames:
+      - "repo.maven.apache.org"
+  securityContext:
+    runAsUser: 0
+    privileged: true
+  containers:
+    - name: maven
+      image: 'maven:3.6.3'
+      command: ['cat']
+      tty: true
+      volumeMounts:
+        - mountPath: /root/.m2
+          name: maven-pvc
+    - name: dind
+      image: 'docker:19.03.8-dind'
+      command: ['cat']
+      tty: true
+      volumeMounts:
+        - mountPath: /var/run/docker.sock
+          name: docker-sock
+        - mountPath: /usr/bin/docker
+          name: docker-bin
+  volumes:
+    - name: docker-sock
+      hostPath:
+        path: /var/run/docker.sock
+        type: Socket
+    - name: docker-bin
+      hostPath:
+        path: /usr/bin/docker
+        type: File
+    - name: maven-pvc
+      persistentVolumeClaim:
+        claimName: jenkins-slave-maven-claim
